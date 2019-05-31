@@ -73,9 +73,9 @@ class Example {
             List<String> resources = resource.listMatch("path/to/folder", ".+pattern.+");
 
             // Stream resources in a folder.
-            resource.stream("path/to/folder").forEach(name -> System.out.println(
-                resource.getAsString(name)
-            ));
+            try (Stream<String> resources = resource.stream("path/to/folder")) {
+                resources.forEach(name -> System.out.println(resource.getAsString(name));
+            }
 
         } catch (ResourceException exception) {
 

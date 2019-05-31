@@ -123,7 +123,9 @@ public class Resource {
     public List<String> list(String folder) {
         Objects.requireNonNull(folder, "The folder resource name is required.");
 
-        return stream(folder).collect(Collectors.toList());
+        try (Stream<String> resources = stream(folder)) {
+            return resources.collect(Collectors.toList());
+        }
     }
 
     /**
@@ -138,13 +140,17 @@ public class Resource {
         Objects.requireNonNull(folder, "The folder resource name is required.");
         Objects.requireNonNull(pattern, "The pattern to match is required.");
 
-        return stream(folder)
-            .filter(resource -> pattern.matcher(resource).matches())
-            .collect(Collectors.toList());
+        try (Stream<String> resources = stream(folder)) {
+            return resources
+                .filter(resource -> pattern.matcher(resource).matches())
+                .collect(Collectors.toList());
+        }
     }
 
     /**
      * Streams the names of available resources in a folder.
+     *
+     * <p>You will need to close this stream to ensure some resources are released.</p>
      *
      * @param folder The folder resource name.
      *
@@ -272,9 +278,7 @@ public class Resource {
      * @return The resource name stream.
      */
     private Stream<String> streamFromJar(String folder, URL folderUrl) {
-        String path = folderUrl.getPath();
-
-        path = path.substring(5, path.indexOf("!/"));
+        final String path = folderUrl.getPath().substring(5, folderUrl.getPath().indexOf("!/"));
 
         try {
             JarFile file = new JarFile(path);
@@ -283,7 +287,17 @@ public class Resource {
                 .stream()
                 .map(ZipEntry::getName)
                 .filter(name -> name.startsWith(folder))
-                .filter(name -> !name.endsWith("/"));
+                .filter(name -> !name.endsWith("/"))
+                .onClose(() -> {
+                    try {
+                        file.close();
+                    } catch (IOException cause) {
+                        throw new ResourceException(
+                            String.format("The JAR file, %s, could not be closed.", path),
+                            cause
+                        );
+                    }
+                });
         } catch (IOException cause) {
             throw new ResourceException(
                 String.format("The resource folder in the JAR, %s, could not be read.", path),

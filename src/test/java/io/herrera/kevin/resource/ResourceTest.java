@@ -3,6 +3,7 @@ package io.herrera.kevin.resource;
 import static io.herrera.kevin.reflect.Reflect.findMethod;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -16,7 +17,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.function.IntConsumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -180,6 +186,208 @@ public class ResourceTest {
     }
 
     /**
+     * Verify that all resources are listed for a folder.
+     */
+    @Test
+    public void listTest() {
+        List<String> resources = withBoth().list("io/herrera");
+
+        assertTrue(resources.contains("io/herrera/kevin/resource/package.txt"));
+        assertTrue(resources.contains("io/herrera/kevin/test/package.txt"));
+        assertEquals(2, resources.size());
+    }
+
+    /**
+     * Verify that all file system resources are listed for a folder.
+     */
+    @Test
+    public void listFromFileSystemTest() {
+        List<String> resources = withFileSystem().list("io/herrera");
+
+        assertTrue(resources.contains("io/herrera/kevin/resource/package.txt"));
+        assertEquals(1, resources.size());
+    }
+
+    /**
+     * Verify that all JAR resources are listed for a folder.
+     */
+    @Test
+    public void listFromJarTest() {
+        List<String> resources = withJar().list("io/herrera");
+
+        assertTrue(resources.contains("io/herrera/kevin/test/package.txt"));
+        assertEquals(1, resources.size());
+    }
+
+    /**
+     * Verify that all resources matching a pattern are listed for a folder.
+     */
+    @Test
+    public void listMatchingTest() {
+        List<String> resources = withBoth().listMatching(
+            "io/herrera",
+            Pattern.compile(".+package.+")
+        );
+
+        assertTrue(resources.contains("io/herrera/kevin/resource/package.txt"));
+        assertTrue(resources.contains("io/herrera/kevin/test/package.txt"));
+        assertEquals(2, resources.size());
+    }
+
+    /**
+     * Verify that all file system resources matching a pattern are listed for a folder.
+     */
+    @Test
+    public void listMatchingFromFileSystemTest() {
+        List<String> resources = withFileSystem().listMatching(
+            "io/herrera",
+            Pattern.compile(".+package.+")
+        );
+
+        assertTrue(resources.contains("io/herrera/kevin/resource/package.txt"));
+        assertEquals(1, resources.size());
+    }
+
+    /**
+     * Verify that all JAR resources matching a pattern are listed for a folder.
+     */
+    @Test
+    public void listMatchingWithFromJarTest() {
+        List<String> resources = withJar().listMatching(
+            "io/herrera",
+            Pattern.compile(".+package.+")
+        );
+
+        assertTrue(resources.contains("io/herrera/kevin/test/package.txt"));
+        assertEquals(1, resources.size());
+    }
+
+    /**
+     * Verify that all resources are streamed for a folder.
+     */
+    @Test
+    public void streamTest() {
+        List<String> resources = new ArrayList<>();
+
+        withBoth().stream("io/herrera").forEach(resources::add);
+
+        assertTrue(resources.contains("io/herrera/kevin/resource/package.txt"));
+        assertTrue(resources.contains("io/herrera/kevin/test/package.txt"));
+        assertEquals(2, resources.size());
+    }
+
+    /**
+     * Verify that all file system resources are streamed for a folder.
+     */
+    @Test
+    public void streamFromFileSystemTest() {
+        List<String> resources = new ArrayList<>();
+
+        withFileSystem().stream("io/herrera").forEach(resources::add);
+
+        assertTrue(resources.contains("io/herrera/kevin/resource/package.txt"));
+        assertEquals(1, resources.size());
+    }
+
+    /**
+     * Verify that all file system resources are streamed for a folder.
+     */
+    @Test
+    public void streamFromJarTest() {
+        List<String> resources = new ArrayList<>();
+
+        withJar().stream("io/herrera").forEach(resources::add);
+
+        assertTrue(resources.contains("io/herrera/kevin/test/package.txt"));
+        assertEquals(1, resources.size());
+    }
+
+    /**
+     * Verify that an empty stream is returned if nothing is found.
+     */
+    @Test
+    public void streamEmptyTest() {
+        List<String> resources = withBoth()
+            .stream("nothing/exists/here")
+            .collect(Collectors.toList());
+
+        assertTrue(resources.isEmpty());
+    }
+
+    /**
+     * Verify that an exception is thrown if a resource folder could not be read.
+     */
+    @Test
+    public void streamReadErrorTest() {
+        assertThrows(
+            ResourceException.class,
+            () -> {
+                ClassLoader classLoader = mock(ClassLoader.class);
+
+                when(classLoader.getResources(any())).thenThrow(new IOException());
+
+                Resource resource = new Resource(classLoader);
+
+                resource.stream("test");
+            }
+        );
+    }
+
+    /**
+     * Verify that an exception is thrown if a file system resource folder could not be read.
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void streamFileSystemReadErrorTest() {
+        assertThrows(
+            ResourceException.class,
+            () -> {
+                ClassLoader classLoader = mock(ClassLoader.class);
+                Enumeration<URL> urls = mock(Enumeration.class);
+
+                when(classLoader.getResources(any())).thenReturn(urls);
+
+                when(urls.hasMoreElements()).thenReturn(true);
+
+                URL url = new URL("file:///does/not/exist");
+
+                when(urls.nextElement()).thenReturn(url);
+
+                Resource resource = new Resource(classLoader);
+
+                resource.stream("");
+            }
+        );
+    }
+
+    /**
+     * Verify that an exception is thrown if a JAR resource folder could not be read.
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void streamJarReadErrorTest() {
+        assertThrows(
+            ResourceException.class,
+            () -> {
+                ClassLoader classLoader = mock(ClassLoader.class);
+                Enumeration<URL> urls = mock(Enumeration.class);
+
+                when(classLoader.getResources(any())).thenReturn(urls);
+
+                when(urls.hasMoreElements()).thenReturn(true);
+
+                URL url = new URL("jar:file:/does/not/exist!/does/not/exist");
+
+                when(urls.nextElement()).thenReturn(url);
+
+                Resource resource = new Resource(classLoader);
+
+                resource.stream("");
+            }
+        );
+    }
+
+    /**
      * Creates a string from an input stream.
      *
      * @param input The input stream.
@@ -200,6 +408,13 @@ public class ResourceTest {
     }
 
     /**
+     * Creates a resource manager for both JAR and file system resources.
+     */
+    private Resource withBoth() {
+        return withJar(ResourceTest.class.getClassLoader());
+    }
+
+    /**
      * Creates a resource manager for the file system resources.
      */
     private Resource withFileSystem() {
@@ -210,11 +425,20 @@ public class ResourceTest {
      * Creates a resource manager for the JAR resources.
      */
     private Resource withJar() {
+        return withJar(null);
+    }
+
+    /**
+     * Creates a resource manager for the JAR resources.
+     *
+     * @param parent The parent class loader.
+     */
+    private Resource withJar(ClassLoader parent) {
         URLClassLoader classLoader = URLClassLoader.newInstance(
             new URL[] {
                 getClass().getClassLoader().getResource("test.jar")
             },
-            null
+            parent
         );
 
         return new Resource(classLoader);

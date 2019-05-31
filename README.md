@@ -14,6 +14,7 @@ consistent method of accessing resource by eliminating this distinction.
 Resource resource = new Resource(MyClass.class.getClassLoader());
 
 System.out.println(resource.getAsString("hello-world.txt", "utf-8"));
+System.out.println(resource.list("path/to/folder"));
 ```
 
 Requirements
@@ -27,7 +28,7 @@ Installation
 ### Gradle
 
 ```groovy
-compile 'io.herrera.kevin:resource:?'
+compile 'io.herrera.kevin:resource:1.1.0'
 ```
 
 ### Maven
@@ -36,7 +37,7 @@ compile 'io.herrera.kevin:resource:?'
 <dependency>
   <groupId>io.herrera.kevin</groupId>
   <artifactId>resource</artifactId>
-  <version>?</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
@@ -64,9 +65,21 @@ class Example {
             // A resource can be retrieved as a string.
             String string = resource.getAsString("my-resource.txt");
 
+            // List resources in a folder.
+            List<String> resources = resource.list("path/to/folder");
+
+            // List matching resources in a folder.
+            // (This is more performant than using list() and then filtering.)
+            List<String> resources = resource.listMatch("path/to/folder", ".+pattern.+");
+
+            // Stream resources in a folder.
+            resource.stream("path/to/folder").forEach(name -> System.out.println(
+                resource.getAsString(name)
+            ));
+
         } catch (ResourceException exception) {
 
-            // If a resource could not be retrieved, this exception is thrown.
+            // If a resource could not be retrieved or listed, this exception is thrown.
             throw exception;
 
         }

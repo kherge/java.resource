@@ -1,0 +1,27 @@
+after_success: ./gradlew sonarqube
+
+branches:
+    only:
+        - master
+
+dist: trusty
+
+jdk:
+    - openjdk8
+    - openjdk9
+    - openjdk10
+    - openjdk11
+    - openjdk-ea
+    - oraclejdk8
+
+install: true
+
+language: java
+
+matrix:
+    allow_failures:
+        - jdk: openjdk-ea
+
+script: ./gradlew jacocoTestReport checkstyleMain
+
+sudo: false

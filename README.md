@@ -7,7 +7,7 @@ Resource
 A library to simplify resource access.
 
 Resource access behaves differently depending on context. For example, resources can be on the file
-system (such as during testing) or contained in a JAR (after a build). This library provides a more
+system (during testing) or contained in a JAR (after a build). This library provides a more
 consistent method of accessing resource by eliminating this distinction.
 
 ```java

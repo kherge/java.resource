@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 /**
  * Simplifies access to JAR resources.
@@ -133,7 +133,7 @@ public class Resource {
      *
      * @throws ResourceException If the input stream could not be read.
      */
-    private void getResource(String name, Consumer<Integer> reader) {
+    private void getResource(String name, IntConsumer reader) {
         try (InputStream stream = getResource(name)) {
             int read;
 

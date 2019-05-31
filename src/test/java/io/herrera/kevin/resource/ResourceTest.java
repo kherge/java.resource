@@ -16,7 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -167,7 +167,7 @@ public class ResourceTest {
             ResourceException.class,
             () -> {
                 try {
-                    findMethod(resource, "getResource", String.class, Consumer.class).invoke(
+                    findMethod(resource, "getResource", String.class, IntConsumer.class).invoke(
                         resource,
                         resourceName,
                         null

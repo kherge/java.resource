@@ -36,6 +36,10 @@ repositories {
 // Declare the project dependencies.
 dependencies {
 
+    // Use Reflect.
+    // https://github.com/kherge/java.reflect
+    testImplementation('io.herrera.kevin:reflect:1.1.0')
+
     // Use JUnit 5.
     // https://docs.gradle.org/current/userguide/java_testing.html#example_junit_jupiter_dependencies
     testImplementation('org.junit.jupiter:junit-jupiter-api:5.3.1')

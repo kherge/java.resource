@@ -45,7 +45,7 @@ Usage
 -----
 
 ```java
-import io.herrera.io.resource.Resource;
+import io.herrera.kevin.resource.Resource;
 import java.io.InputStream;
 import java.nio.file.Path;
 
